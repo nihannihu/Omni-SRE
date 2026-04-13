@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { supabase } from '../lib/supabase';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -7,45 +8,31 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach JWT token to every request
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Attach Supabase JWT to every outgoing request
+api.interceptors.request.use(async (config) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    config.headers.Authorization = `Bearer ${session.access_token}`;
   }
   return config;
 });
 
-// Handle 401 — try refresh, else redirect to login
+// Handle 401 — Supabase handles token refresh internally,
+// but if we get a 401 from the backend, attempt a session refresh
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     if (error.response?.status === 401 && !error.config._retry) {
       error.config._retry = true;
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        try {
-          const { data } = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
-          localStorage.setItem('accessToken', data.accessToken);
-          error.config.headers.Authorization = `Bearer ${data.accessToken}`;
-          return api(error.config);
-        } catch {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          window.location.href = '/login';
-        }
+      const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
+      if (session && !refreshError) {
+        error.config.headers.Authorization = `Bearer ${session.access_token}`;
+        return api(error.config);
       }
     }
     return Promise.reject(error);
   }
 );
-
-// ── Auth ──
-export const authAPI = {
-  register: (data) => api.post('/auth/register', data),
-  login: (data) => api.post('/auth/login', data),
-  me: () => api.get('/auth/me'),
-};
 
 // ── Workspaces ──
 export const workspaceAPI = {

@@ -4,7 +4,8 @@ import {
   ShieldCheck, GitPullRequest, AlertTriangle, Brain,
   Plus, FileCode, Clock, TrendingUp
 } from 'lucide-react';
-import { workspaceAPI, reviewAPI, incidentAPI } from '../services/api';
+import { supabase } from '../lib/supabase';
+import { reviewAPI } from '../services/api';
 
 export default function Dashboard() {
   const { workspaceId } = useParams();
@@ -16,14 +17,57 @@ export default function Dashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [wsRes, revRes, incRes] = await Promise.all([
-          workspaceAPI.get(workspaceId),
-          reviewAPI.list(workspaceId),
-          incidentAPI.list(workspaceId),
-        ]);
-        setWorkspace(wsRes.data.workspace);
-        setReviews(revRes.data.reviews || []);
-        setIncidents(incRes.data.incidents || []);
+        // Fetch workspace from Supabase
+        const { data: wsData, error: wsError } = await supabase
+          .from('workspaces')
+          .select('id, name, created_by, created_at')
+          .eq('id', workspaceId)
+          .single();
+
+        if (wsError) {
+          console.error('Error fetching workspace:', wsError);
+        } else {
+          setWorkspace(wsData);
+        }
+
+        // Fetch incidents from Supabase
+        const { data: incData, error: incError } = await supabase
+          .from('incidents')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (incError) {
+          console.error('Error fetching incidents:', incError);
+        } else {
+          setIncidents(incData || []);
+        }
+
+        // Fetch reviews directly from Supabase
+        try {
+          const { data: revData, error: revError } = await supabase
+            .from('reviews')
+            .select('*')
+            .eq('workspace_id', workspaceId)
+            .order('created_at', { ascending: false });
+
+          if (revError) throw revError;
+          
+          // Map to match the existing UI expectations (e.g. _id -> id, createdAt -> created_at)
+          const mappedReviews = (revData || []).map(r => ({
+            ...r,
+            _id: r.id,
+            createdAt: r.created_at,
+            prNumber: r.pr_number || r.pr_url?.split('/').pop(),
+            prTitle: r.pr_title
+          }));
+          
+          setReviews(mappedReviews);
+        } catch (revErr) {
+          console.error('Reviews fetch failed:', revErr);
+        }
+
       } catch (err) {
         console.error('Dashboard load error:', err);
       } finally {
@@ -74,8 +118,8 @@ export default function Dashboard() {
             <div className="stat-value">{criticalFindings}</div>
           </div>
           <div className="stat-card" style={{ '--stat-accent': 'var(--accent-yellow)' }}>
-            <div className="stat-label">Total Findings</div>
-            <div className="stat-value">{totalFindings}</div>
+            <div className="stat-label">Incidents Logged</div>
+            <div className="stat-value">{incidents.length}</div>
           </div>
           <div className="stat-card" style={{ '--stat-accent': 'var(--accent-cyan)' }}>
             <div className="stat-label">Memories Recalled</div>
@@ -159,28 +203,30 @@ export default function Dashboard() {
         {/* Incidents */}
         {incidents.length > 0 && (
           <div style={{ marginTop: 'var(--space-2xl)' }}>
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 'var(--space-md)' }}>
-              <AlertTriangle size={18} style={{ marginRight: 8, verticalAlign: 'middle', color: 'var(--accent-red)' }} />
-              Security Incidents
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+              <h3 style={{ fontSize: 18, fontWeight: 600 }}>
+                <AlertTriangle size={18} style={{ marginRight: 8, verticalAlign: 'middle', color: 'var(--accent-red)' }} />
+                Security Incidents
+              </h3>
+              <Link to={`/workspace/${workspaceId}/incident`} className="btn btn-sm" style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
+                <Plus size={14} /> Log Incident
+              </Link>
+            </div>
             <div className="card-grid">
               {incidents.slice(0, 6).map((inc) => (
-                <div key={inc._id} className="card">
+                <div key={inc.id} className="card">
                   <div className="card-header">
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)' }}>
-                      {inc.incidentId}
-                    </span>
-                    <span className={`badge badge-${inc.severity === 'P1' ? 'critical' : inc.severity === 'P2' ? 'high' : 'medium'}`}>
-                      {inc.severity}
+                      {inc.title?.split(':')[0] || 'INC'}
                     </span>
                   </div>
                   <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{inc.title}</h4>
                   <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                    {inc.rootCause?.substring(0, 120)}...
+                    {inc.description?.substring(0, 120)}{inc.description?.length > 120 ? '...' : ''}
                   </p>
-                  {inc.retainedToHindsight && (
-                    <div style={{ marginTop: 12, fontSize: 11, color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Brain size={12} /> Retained to memory
+                  {inc.new_rule && (
+                    <div style={{ marginTop: 12, fontSize: 12, color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.08)', padding: '4px 8px', borderRadius: 'var(--radius-sm)' }}>
+                      <Brain size={12} /> Rule: {inc.new_rule.substring(0, 80)}{inc.new_rule.length > 80 ? '...' : ''}
                     </div>
                   )}
                 </div>
