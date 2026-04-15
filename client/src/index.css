@@ -1,0 +1,210 @@
+:root {
+  /* Lumina Code Logic Design System */
+  
+  /* Core Colors */
+  --primary: #004ac6;
+  --primary-container: #2563eb;
+  --secondary: #06b6d4;
+  --accent-purple: #8b5cf6;
+  --accent-red: #dc2626;
+  --accent-orange: #ea580c;
+  --accent-green: #22c55e;
+  
+  /* Surfaces & Backgrounds */
+  --bg-pure: #ffffff;
+  --bg-page: #f8fafc;
+  --bg-dark: #0a0a14;
+  --bg-darker: #0f0f1a;
+  --bg-card: #ffffff;
+  
+  /* Text */
+  --text-primary: #151c27;
+  --text-secondary: #6b7280;
+  --text-inverse: #ffffff;
+  --text-muted: #9ca3af;
+  
+  /* Borders & Divider */
+  --border-light: #e5e7eb;
+  --border-medium: #d1d5db;
+  --border-dark: #1f1f2e;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #2563eb, #06b6d4);
+  --gradient-danger: linear-gradient(135deg, #dc2626, #ea580c);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-ambient: 0 20px 40px rgba(37, 99, 235, 0.08); /* Primary tinted ambient shadow */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Utilities */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Base Components according to Design System */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: 9999px; /* The Pill Standard */
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.39);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.23);
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: var(--gradient-danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.23);
+}
+
+.btn-dark {
+  background-color: #24292f;
+  color: white;
+}
+
+.btn-dark:hover {
+  background-color: #1b1f23;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+  background: rgba(0,0,0,0.05);
+  color: var(--text-primary);
+}
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  box-shadow: var(--shadow-ambient);
+  padding: 24px;
+  /* The Tonal Layering - no strong borders */
+}
+
+/* Inputs */
+.input-base {
+  width: 100%;
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid var(--border-medium);
+  padding: 0 16px;
+  font-family: inherit;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background-color: white;
+  color: var(--text-primary);
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--primary-container);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input-base::placeholder {
+  color: var(--text-muted);
+}
+
+textarea.input-base {
+  height: auto;
+  min-height: 180px;
+  padding: 16px;
+  resize: vertical;
+}
+
+.input-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Particle Background Container */
+.particle-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  background-color: white; /* Base canvas */
+  overflow: hidden;
+}
+
+/* Simple CSS particles for static fallback if JS doesn't load them */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: float 20s infinite linear;
+}
+
+@keyframes float {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: var(--max-opacity, 0.5); }
+  90% { opacity: var(--max-opacity, 0.5); }
+  100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
+}
+
+/* Layout Utilities */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
