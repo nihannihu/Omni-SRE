@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { ShieldAlert, Plus, Brain, CheckCircle } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { ShieldAlert, Plus, Brain, CheckCircle, ArrowLeft, Terminal } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { incidentAPI } from '../services/api';
+import GlassCard from '../components/ui/GlassCard';
 
 export default function IncidentForm() {
   const { workspaceId } = useParams();
@@ -21,7 +22,6 @@ export default function IncidentForm() {
     setLoading(true);
 
     try {
-      // STEP 1: Write to Supabase incidents table (source of truth for RLS-protected data)
       const { data: supabaseIncident, error: supaError } = await supabase
         .from('incidents')
         .insert([{
@@ -30,14 +30,10 @@ export default function IncidentForm() {
           description: form.rootCause,
           new_rule: form.lessonsLearned || null,
         }])
-        .select()
-        .single();
+        .select().single();
 
-      if (supaError) {
-        throw new Error(`Supabase insert failed: ${supaError.message}`);
-      }
+      if (supaError) throw new Error(supaError.message);
 
-      // STEP 2: Send to backend to ingest into Hindsight Vector Memory
       try {
         await incidentAPI.create({
           workspaceId,
@@ -50,16 +46,13 @@ export default function IncidentForm() {
         });
         setRetainedToMemory(true);
       } catch (ingestErr) {
-        // Non-fatal: The incident is already persisted in Supabase.
-        // Hindsight ingestion can be retried later.
-        console.warn('[INCIDENT] Hindsight ingestion failed (non-fatal):', ingestErr.message);
+        console.warn('[INCIDENT] Hindsight ingestion failed:', ingestErr.message);
       }
 
-      setSuccess('Incident logged successfully!');
+      setSuccess('Operational Intelligence Logged Swuccessfully.');
       setForm({ incidentId: '', title: '', severity: 'P2', rootCause: '', affectedFiles: '', lessonsLearned: '' });
     } catch (err) {
-      console.error('[INCIDENT] Submission failed:', err);
-      setError(err.message || 'Failed to log incident');
+      setError(err.message || 'Failed to sync incident');
     } finally {
       setLoading(false);
     }
@@ -68,60 +61,118 @@ export default function IncidentForm() {
   const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   return (
-    <div className="animate-fade-in">
-      <div className="page-header">
-        <h2><ShieldAlert size={22} style={{ marginRight: 8, verticalAlign: 'middle', color: 'var(--accent-red)' }} />Log Security Incident</h2>
-        <p>Record a security incident. It will be retained into Hindsight memory for future code reviews.</p>
-      </div>
-      <div className="page-body" style={{ maxWidth: 700 }}>
-        {error && <div className="auth-error">{error}</div>}
-        {success && (
-          <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 'var(--radius-md)', padding: 'var(--space-md)', color: 'var(--accent-green)', fontSize: 14, marginBottom: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <CheckCircle size={16} /> {success}
-            {retainedToMemory && (
-              <span style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(99,102,241,0.15)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', color: 'var(--brand-primary-light)', fontSize: 12 }}>
-                <Brain size={12} /> Retained to Hindsight
-              </span>
-            )}
+    <div className="animate-slide-up">
+      <nav style={{ marginBottom: '2rem' }}>
+        <Link to={`/workspace/${workspaceId}`} style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+          <ArrowLeft size={16} /> Dashboard
+        </Link>
+      </nav>
+
+      <header style={{ marginBottom: '3rem' }}>
+        <h2 style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <ShieldAlert size={32} style={{ color: 'var(--red-glow)' }} /> Log Security Incident
+        </h2>
+        <p style={{ color: 'var(--text-muted)' }}>
+          Record root cause analysis and lessons learned. Findings are used to calibrate future code reviews.
+        </p>
+      </header>
+
+      <div style={{ maxWidth: '800px' }}>
+        {error && (
+          <div style={{ 
+            background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', 
+            padding: '1rem', borderRadius: 'var(--radius-md)', color: 'var(--red-glow)', 
+            marginBottom: '2rem', fontSize: '0.9rem' 
+          }}>
+            {error}
           </div>
         )}
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}>
-            <div className="form-group">
-              <label className="form-label">Incident ID</label>
-              <input className="form-input" value={form.incidentId} onChange={update('incidentId')} placeholder="INC-012" required />
+
+        {success && (
+          <GlassCard style={{ marginBottom: '2rem', border: '1px solid var(--green-glow)', background: 'rgba(16, 185, 129, 0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--green-glow)' }}>
+              <CheckCircle size={20} />
+              <div style={{ fontWeight: 600 }}>{success}</div>
+              {retainedToMemory && (
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(129, 140, 248, 0.1)', padding: '0.4rem 0.75rem', borderRadius: 'var(--radius-full)', color: 'var(--brand-secondary)', fontSize: '0.75rem', fontWeight: 700 }}>
+                  <Brain size={14} /> CALIBRATED TO HINDSIGHT
+                </div>
+              )}
             </div>
-            <div className="form-group">
-              <label className="form-label">Severity</label>
-              <select className="form-select" value={form.severity} onChange={update('severity')}>
-                <option value="P1">P1 — Critical</option>
-                <option value="P2">P2 — High</option>
-                <option value="P3">P3 — Medium</option>
-                <option value="P4">P4 — Low</option>
-              </select>
+          </GlassCard>
+        )}
+
+        <GlassCard>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div>
+                <Label>Incident Reference</Label>
+                <Input value={form.incidentId} onChange={update('incidentId')} placeholder="e.g. INC-SEC-092" required />
+              </div>
+              <div>
+                <Label>Severity Matrix</Label>
+                <Select value={form.severity} onChange={update('severity')}>
+                  <option value="P1">P1 — MISSION CRITICAL</option>
+                  <option value="P2">P2 — HIGH SEVERITY</option>
+                  <option value="P3">P3 — STABLE OPERATIONAL</option>
+                  <option value="P4">P4 — MINOR ADVISORY</option>
+                </Select>
+              </div>
             </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Title</label>
-            <input className="form-input" value={form.title} onChange={update('title')} placeholder="Production NoSQL Injection via /api/search" required />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Root Cause — What Went Wrong?</label>
-            <textarea className="form-textarea" value={form.rootCause} onChange={update('rootCause')} placeholder="Unsanitized $where clause allowed arbitrary JS execution on the database..." required style={{ fontFamily: 'var(--font-sans)', minHeight: 120 }} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Affected Files (comma-separated)</label>
-            <input className="form-input" value={form.affectedFiles} onChange={update('affectedFiles')} placeholder="src/routes/search.js, src/middleware/sanitize.js" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">New Rule / Lessons Learned</label>
-            <textarea className="form-textarea" value={form.lessonsLearned} onChange={update('lessonsLearned')} placeholder="All MongoDB queries must use parameterized helpers from /lib/db/safe-query.js" style={{ fontFamily: 'var(--font-sans)', minHeight: 100 }} />
-          </div>
-          <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
-            {loading ? <><span className="spinner" /> Logging...</> : <><Plus size={16} /> Log Incident & Retain to Memory</>}
-          </button>
-        </form>
+
+            <div>
+              <Label>Incident Vector / Title</Label>
+              <Input value={form.title} onChange={update('title')} placeholder="Injection vulnerability in authentication middleware..." required />
+            </div>
+
+            <div>
+              <Label>Root Cause Analysis (Technical Internal)</Label>
+              <TextArea value={form.rootCause} onChange={update('rootCause')} placeholder="Detailed mechanical breakdown of the failure vector..." required />
+            </div>
+
+            <div>
+              <Label>Impacted Scope (Files)</Label>
+              <Input value={form.affectedFiles} onChange={update('affectedFiles')} placeholder="src/auth.js, lib/database/adapter.ts" />
+            </div>
+
+            <div style={{ background: 'rgba(56, 189, 248, 0.03)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(56, 189, 248, 0.1)' }}>
+              <Label style={{ color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Terminal size={14} /> Hindsight Calibration Rule
+              </Label>
+              <TextArea 
+                value={form.lessonsLearned} 
+                onChange={update('lessonsLearned')} 
+                placeholder="Future reviews should flag any usage of..." 
+                style={{ border: 'none', background: 'transparent', padding: '0.5rem 0', boxShadow: 'none' }}
+              />
+            </div>
+
+            <button className="btn-premium btn-primary" type="submit" disabled={loading} style={{ padding: '1.25rem' }}>
+              {loading ? (
+                <><div style={{ width: 16, height: 16, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> PROCESSING...</>
+              ) : (
+                <><ShieldAlert size={18} /> SYNC TO INTELLIGENCE MEMORY</>
+              )}
+            </button>
+          </form>
+        </GlassCard>
       </div>
     </div>
   );
+}
+
+function Label({ children, style }) {
+  return <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem', ...style }}>{children}</label>;
+}
+
+function Input(props) {
+  return <input {...props} style={{ width: '100%', padding: '0.875rem 1.25rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none', transition: 'var(--transition-fast)' }} onFocus={(e) => e.target.style.borderColor = 'var(--brand-primary)'} onBlur={(e) => e.target.style.borderColor = 'var(--glass-border)'} />;
+}
+
+function Select(props) {
+  return <select {...props} style={{ width: '100%', padding: '0.875rem 1.25rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none', appearance: 'none' }} />;
+}
+
+function TextArea(props) {
+  return <textarea {...props} style={{ width: '100%', minHeight: '120px', padding: '1rem 1.25rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none', resize: 'vertical', ...props.style }} />;
 }
