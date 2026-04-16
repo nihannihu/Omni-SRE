@@ -2,7 +2,7 @@ import React from 'react';
 import { supabase, supabaseUrl } from '../lib/supabase';
 import omniLogo from '../assets/omni-logo.jpeg';
 import GlassCard from '../components/ui/GlassCard';
-import { Github } from 'lucide-react';
+import { GitPullRequest } from 'lucide-react';
 
 export default function Auth() {
   const handleLogin = async () => {
@@ -58,7 +58,7 @@ export default function Auth() {
           className="btn-premium btn-primary"
           style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}
         >
-          <Github size={20} />
+          <GitPullRequest size={20} />
           <span>Continue with GitHub</span>
         </button>
 

@@ -58,7 +58,7 @@ export default function Sidebar({ user, workspaces, currentWs, onLogout }) {
             </div>
           </div>
         </div>
-        <button className="btn-premium" onClick={onLogout} style={{ width: '100%', justifyContent: 'center', background: 'rgba(244, 63, 94, 0.1)', color: var(--red-glow), border: '1px solid rgba(244, 63, 94, 0.2)' }}>
+        <button className="btn-premium" onClick={onLogout} style={{ width: '100%', justifyContent: 'center', background: 'rgba(244, 63, 94, 0.1)', color: 'var(--red-glow)', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
           <LogOut size={16} /> Sign Out
         </button>
       </div>

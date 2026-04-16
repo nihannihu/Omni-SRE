@@ -102,6 +102,9 @@ class LLMService:
             for m in memories["file_history"]:
                 memory_section += f"- [{m.get('type', 'unknown')}] {m.get('text', '')}\n"
 
+        if not memory_section:
+            memory_section = "## NO HISTORICAL CONTEXT AVAILABLE\nThis is a first review — no team memory available yet. Provide standard analysis."
+
         return f"""You are Omni-SRE, an elite context-aware code review agent. You don't just find generic issues — you understand this team's history, past incidents, and coding conventions.
 
 ## YOUR CAPABILITIES
@@ -115,7 +118,7 @@ class LLMService:
 - Language: {repo_info.get('language', 'unknown')}
 - Default branch: {repo_info.get('default_branch', 'main')}
 
-{memory_section if memory_section else "## NO HISTORICAL CONTEXT AVAILABLE\\nThis is a first review — no team memory available yet. Provide standard analysis."}
+{memory_section}
 
 ## RULES
 - Use the report_finding tool for EACH finding. Do not skip the tool.
