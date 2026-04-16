@@ -1,28 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Send, FileCode, Brain, Command, CheckCircle, AlertTriangle, Upload } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { 
+  Send, FileCode, Brain, Command, CheckCircle, 
+  AlertTriangle, Upload, ArrowLeft, Terminal, Cpu
+} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ReactMarkdown from 'react-markdown';
+import GlassCard from '../components/ui/GlassCard';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const FASTAPI_URL = 'http://localhost:8000/api/review/stream';
 
 export default function NewReview() {
   const { workspaceId } = useParams();
   const navigate = useNavigate();
+  
   const [prUrl, setPrUrl] = useState('');
   const [prNumber, setPrNumber] = useState('');
   const [prTitle, setPrTitle] = useState('');
   const [diff, setDiff] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   
-  // Streaming state
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamEvents, setStreamEvents] = useState([]);
-  const [liveFindings, setLiveFindings] = useState([]);
-  const [error, setError] = useState('');
-  const [reviewId, setReviewId] = useState(null);
-  const [isReviewComplete, setIsReviewComplete] = useState(false);
   const [markdownContent, setMarkdownContent] = useState('');
+  const [error, setError] = useState('');
+  const [isReviewComplete, setIsReviewComplete] = useState(false);
 
   const terminalRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -33,7 +35,6 @@ export default function NewReview() {
     }
   }, [streamEvents]);
 
-  // Parse GitHub PR URL to extract PR number and title
   const parsePrUrl = (url) => {
     const match = url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
     if (match) {
@@ -42,7 +43,6 @@ export default function NewReview() {
     }
   };
 
-  // Handle .diff file drop/upload
   const handleFileDrop = async (e) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -50,11 +50,6 @@ export default function NewReview() {
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    if (!file.name.endsWith('.diff') && !file.name.endsWith('.patch') && file.type !== 'text/plain') {
-      setError('Please drop a .diff or .patch file');
-      return;
-    }
-
     const text = await file.text();
     setDiff(text);
     setError('');
@@ -63,28 +58,19 @@ export default function NewReview() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!diff.trim()) {
-      setError('Paste a code diff or drop a .diff file to review');
+      setError('Technical payload required. Paste a code diff or drop a .diff file.');
       return;
     }
+
     setError('');
     setIsStreaming(true);
     setIsReviewComplete(false);
     setMarkdownContent('');
-    setStreamEvents([{ time: new Date(), message: 'Initiating context-aware review...' }]);
-    setLiveFindings([]);
+    setStreamEvents([{ time: new Date(), message: 'INITIATING AGENTIC CHAIN...', type: 'info' }]);
 
     try {
-      // Get the current Supabase session token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        setError('Authentication expired. Please log in again.');
-        setIsStreaming(false);
-        return;
-      }
-
-      // Point directly to the Python FastAPI Brain
-      const FASTAPI_URL = 'http://localhost:8000/api/review/stream';
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Session expired');
 
       const response = await fetch(FASTAPI_URL, {
         method: 'POST',
@@ -95,14 +81,11 @@ export default function NewReview() {
         body: JSON.stringify({
           workspace_id: workspaceId,
           diff: diff,
-          pr_context: prTitle ? `PR #${prNumber}: ${prTitle}` : 'Manual Review'
+          pr_context: prTitle ? `PR #${prNumber}: ${prTitle}` : 'Manual Analysis'
         })
       });
 
-      if (!response.ok) {
-        const errBody = await response.text();
-        throw new Error(`API Error ${response.status}: ${errBody}`);
-      }
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
@@ -114,253 +97,179 @@ export default function NewReview() {
         
         buffer += decoder.decode(value, { stream: true });
         let parts = buffer.split('\n\n');
-        buffer = parts.pop(); // Keep incomplete chunk in buffer
+        buffer = parts.pop();
 
         for (const part of parts) {
           if (!part.trim()) continue;
-          
           if (part.startsWith('data: ')) {
-            const dataStr = part.substring(6);
-            
-            try {
-              const data = JSON.parse(dataStr);
+            const data = JSON.parse(part.substring(6));
+            if (data.system_msg) setStreamEvents(prev => [...prev, { time: new Date(), message: data.system_msg, type: 'info' }]);
+            if (data.content) setMarkdownContent(prev => prev + data.content);
+            if (data.done) {
+              setStreamEvents(prev => [...prev, { time: new Date(), message: `EXECUTION COMPLETE. Found ${data.stats?.findings_count || 0} vulnerabilities.`, type: 'complete' }]);
+              setIsStreaming(false);
+              setIsReviewComplete(true);
               
-              // Handle system messages (RAG steps)
-              if (data.system_msg) {
-                 setStreamEvents(prev => [...prev, { time: new Date(), message: data.system_msg, type: 'info' }]);
-              }
-
-              // Handle streaming content (The actual code review text)
-              if (data.content) {
-                 setMarkdownContent(prev => prev + data.content);
-                 // We still keep the terminal event for the raw log if needed 
-                 // (Though rendering Markdown below it is much better)
-              }
-              
-              // Handle completion
-              if (data.done) {
-                 setStreamEvents(prev => [...prev, { time: new Date(), message: `✅ Review complete! Found ${data.stats?.findings_count || 0} critical issues.`, type: 'complete' }]);
-                 setIsStreaming(false);
-                 setIsReviewComplete(true);
-                 
-                 // Persist to Supabase
-                 const { error: dbError } = await supabase.from('reviews').insert({
-                     workspace_id: workspaceId,
-                     created_by: session.user.id,
-                     pr_url: prUrl || 'Manual Diff Upload',
-                     pr_title: prTitle || 'Manual Review',
-                     status: 'completed',
-                     findings_count: data.stats?.findings_count || 0,
-                     result: { memoryRecallCount: data.stats?.memoryRecallCount || 0 }
-                 });
-                 if (dbError) console.error('[SUPABASE] Failed to save review log:', dbError);
-              }
-
-              if (data.error) {
-                 setError(data.error || 'Stream failed');
-                 setIsStreaming(false);
-              }
-            } catch (err) {
-              console.error('Failed to parse SSE JSON data:', err, dataStr);
+              await supabase.from('reviews').insert({
+                  workspace_id: workspaceId,
+                  created_by: session.user.id,
+                  pr_url: prUrl || 'Manual Diff',
+                  pr_title: prTitle || 'Manual Review',
+                  status: 'completed',
+                  findings_count: data.stats?.findings_count || 0,
+                  result: { 
+                    memoryRecallCount: data.stats?.memoryRecallCount || 0,
+                    maturity: data.stats?.maturity || { level: 'ESTABLISHED' }
+                  }
+              });
             }
+            if (data.error) throw new Error(data.error);
           }
         }
       }
-
-      // If we exited the loop without a review_complete event
-      if (isStreaming) {
-        setIsStreaming(false);
-        setStreamEvents(prev => [...prev, { time: new Date(), message: 'Stream ended', type: 'info' }]);
-      }
     } catch (err) {
-      setError(err.message || 'Failed to trigger review stream');
+      setError(err.message);
       setIsStreaming(false);
     }
   };
 
-  if (isStreaming || isReviewComplete || liveFindings.length > 0) {
+  if (isStreaming || isReviewComplete) {
     return (
-      <div className="animate-fade-in" style={{ maxWidth: 800, margin: '0 auto' }}>
-        <div className="page-header" style={{ paddingBottom: 0, border: 'none', textAlign: 'center' }}>
-          {isStreaming && <div className="spinner" style={{ margin: '0 auto 16px', display: 'block', width: 32, height: 32 }} />}
-          <h2>{isStreaming ? 'Agentic Review in Progress' : 'Review Complete'}</h2>
-          <p>{isStreaming ? 'Processing the 6-hop AI chain. Do not close this page.' : 'Analysis finished. You can review the LLM output below.'}</p>
-          {isReviewComplete && (
-            <button className="btn" style={{ margin: '16px auto 0', display: 'block', padding: '8px 16px' }} onClick={() => navigate(`/workspace/${workspaceId}`)}>
-              Back to Dashboard
-            </button>
-          )}
-        </div>
+      <div className="animate-slide-up" style={{ maxWidth: '900px', margin: '0 auto' }}>
+        <header style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+            {isStreaming ? <Cpu size={32} className="spin" style={{ color: 'var(--brand-primary)' }} /> : <CheckCircle size={32} style={{ color: 'var(--green-glow)' }} />}
+            {isStreaming ? 'Agentic Analysis Active' : 'Intelligence Cycle Complete'}
+          </h2>
+          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            {isStreaming ? 'Synchronizing with institutional memory and evaluating risk vectors...' : 'Technical audit finished. Summary provided below.'}
+          </p>
+        </header>
 
-        <div className="page-body">
-          {/* Terminal stream window */}
-          <div 
-            ref={terminalRef}
-            style={{
-              background: '#09090b',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-lg)',
-              padding: 'var(--space-md)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: 13,
-              height: 300,
-              overflowY: 'auto',
-              marginBottom: 'var(--space-xl)',
-              boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
-            }}
-          >
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {/* Terminal View */}
+          <div ref={terminalRef} style={{
+            background: '#020617', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-lg)',
+            padding: '1.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', height: '240px', overflowY: 'auto',
+            boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.5)', position: 'relative'
+          }}>
+            <div style={{ position: 'sticky', top: 0, right: 0, display: 'flex', justifyContent: 'flex-end', opacity: 0.5 }}>
+              <Terminal size={12} />
+            </div>
             {streamEvents.map((evt, idx) => (
-              <div key={idx} style={{ marginBottom: 8, display: 'flex', gap: 12 }}>
-                <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
-                  [{evt.time.toLocaleTimeString([], {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'})}]
-                </span>
-                <span style={{ 
-                  color: evt.type === 'error' ? 'var(--accent-red)' : 
-                         evt.type === 'finding_discovered' ? 'var(--accent-orange)' : 
-                         evt.type === 'recall_complete' ? 'var(--brand-primary-light)' :
-                         evt.type === 'complete' ? 'var(--accent-green)' : 'var(--text-primary)' 
-                }}>
-                  {evt.message}
-                </span>
+              <div key={idx} style={{ marginBottom: '0.4rem', display: 'flex', gap: '1rem' }}>
+                <span style={{ color: 'var(--text-dim)', flexShrink: 0 }}>[{evt.time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'})}]</span>
+                <span style={{ color: evt.type === 'complete' ? 'var(--green-glow)' : 'var(--text-primary)' }}>{evt.message}</span>
               </div>
             ))}
           </div>
 
-          {/* Live findings preview */}
-          {liveFindings.length > 0 && (
-            <div>
-              <h4 style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AlertTriangle size={16} /> Live Findings Preview ({liveFindings.length})
-              </h4>
-              <div style={{ display: 'grid', gap: 12 }}>
-                {liveFindings.map((f, idx) => (
-                  <div key={idx} style={{ 
-                    padding: 12, 
-                    background: 'var(--bg-elevated)', 
-                    borderRadius: 'var(--radius-md)',
-                    borderLeft: `3px solid var(--severity-${f.severity})`
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontWeight: 500, fontSize: 14 }}>{f.title}</span>
-                      {f.has_citations && <span className="badge" style={{ background: 'var(--brand-glow)', color: 'var(--brand-primary-light)' }}><Brain size={12}/> Memory</span>}
-                    </div>
-                    {f.description && (
-                      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
-                        {f.description.substring(0, 200)}{f.description.length > 200 ? '...' : ''}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Markdown Content */}
+          {markdownContent && (
+            <GlassCard className="review-result-md" style={{ padding: '2.5rem', lineHeight: 1.7 }}>
+              <ReactMarkdown>{markdownContent}</ReactMarkdown>
+            </GlassCard>
           )}
 
-          {/* Render Markdown result */}
-          {markdownContent && (
-            <div className="review-markdown" style={{ 
-              marginTop: 'var(--space-2xl)', 
-              padding: 'var(--space-xl)', 
-              background: 'var(--bg-elevated)', 
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-color)',
-              lineHeight: 1.6
-            }}>
-              <ReactMarkdown>{markdownContent}</ReactMarkdown>
+          {isReviewComplete && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+              <button onClick={() => navigate(`/workspace/${workspaceId}`)} className="btn-premium btn-primary">
+                Return to Command Center
+              </button>
             </div>
           )}
-        </div>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in">
-      <div className="page-header">
-        <h2>New Code Review</h2>
-        <p>Paste a diff or drop a .diff file for context-aware analysis powered by team memory</p>
-      </div>
+    <div className="animate-slide-up" style={{ maxWidth: '800px' }}>
+      <nav style={{ marginBottom: '2rem' }}>
+        <Link to={`/workspace/${workspaceId}`} style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+          <ArrowLeft size={16} /> Back
+        </Link>
+      </nav>
 
-      <div className="page-body" style={{ maxWidth: 800 }}>
-        {error && <div className="auth-error">{error}</div>}
+      <header style={{ marginBottom: '3rem' }}>
+        <h2 style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+          Initiate Code Review
+        </h2>
+        <p style={{ color: 'var(--text-muted)' }}>
+          Inject technical debt knowledge and context into your reviews.
+        </p>
+      </header>
 
-        <form onSubmit={handleSubmit}>
-          {/* GitHub PR URL input */}
-          <div className="form-group">
-            <label className="form-label">GitHub PR URL (optional — auto-extracts PR info)</label>
-            <input 
-              className="form-input" 
+      {error && (
+        <div style={{ background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '1rem', borderRadius: 'var(--radius-md)', color: 'var(--red-glow)', marginBottom: '2rem', fontSize: '0.9rem' }}>
+          {error}
+        </div>
+      )}
+
+      <GlassCard title="Analysis Payload">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <Label>Provider Context (Optional)</Label>
+            <Input 
               type="url" 
               value={prUrl} 
               onChange={(e) => { setPrUrl(e.target.value); parsePrUrl(e.target.value); }}
-              placeholder="https://github.com/owner/repo/pull/55" 
+              placeholder="GitHub Pull Request URL" 
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}>
-            <div className="form-group">
-              <label className="form-label">PR Number</label>
-              <input className="form-input" type="number" value={prNumber} onChange={(e) => setPrNumber(e.target.value)} placeholder="55" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
+            <div>
+              <Label>Reference ID</Label>
+              <Input type="text" value={prNumber} onChange={(e) => setPrNumber(e.target.value)} placeholder="e.g. 55" />
             </div>
-            <div className="form-group">
-              <label className="form-label">PR Title</label>
-              <input className="form-input" type="text" value={prTitle} onChange={(e) => setPrTitle(e.target.value)} placeholder="Fix API issue" />
+            <div>
+              <Label>Review Title</Label>
+              <Input type="text" value={prTitle} onChange={(e) => setPrTitle(e.target.value)} placeholder="Feature: Auth migration" />
             </div>
           </div>
 
-          {/* Drag and drop zone */}
-          <div 
-            className="form-group"
+          <div
             onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={handleFileDrop}
+            style={{
+              border: `2px dashed ${isDragOver ? 'var(--brand-primary)' : 'var(--glass-border)'}`,
+              borderRadius: 'var(--radius-md)', padding: '2rem', textAlign: 'center', transition: 'var(--transition-fast)',
+              background: isDragOver ? 'rgba(56, 189, 248, 0.05)' : 'rgba(0,0,0,0.1)'
+            }}
           >
-            <label className="form-label">
-              <FileCode size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} /> Code Diff (unified format)
-            </label>
-            
-            {!diff && (
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  border: `2px dashed ${isDragOver ? 'var(--brand-primary)' : 'var(--border-color)'}`,
-                  borderRadius: 'var(--radius-lg)',
-                  padding: 'var(--space-xl)',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  marginBottom: 'var(--space-md)',
-                  background: isDragOver ? 'rgba(99, 102, 241, 0.05)' : 'transparent',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <Upload size={24} style={{ color: 'var(--text-muted)', marginBottom: 8 }} />
-                <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
-                  Drop a <code>.diff</code> or <code>.patch</code> file here, or click to browse
-                </p>
-                <input 
-                  ref={fileInputRef}
-                  type="file" 
-                  accept=".diff,.patch,.txt" 
-                  onChange={handleFileDrop} 
-                  style={{ display: 'none' }} 
-                />
-              </div>
-            )}
-
-            <textarea
-              className="form-textarea"
-              value={diff}
-              onChange={(e) => setDiff(e.target.value)}
-              placeholder={`--- a/src/index.js\n+++ b/src/index.js\n@@ -1,3 +1,4 @@\n+db.users.find(req.query)`}
-              style={{ minHeight: diff ? 280 : 120, fontFamily: 'var(--font-mono)', fontSize: 13 }}
-              required
-            />
+            <Upload size={24} style={{ color: 'var(--text-dim)', marginBottom: '0.5rem' }} />
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Drop a <code>.diff</code> file or paste the content below.
+            </p>
+            <input ref={fileInputRef} type="file" onChange={handleFileDrop} style={{ display: 'none' }} />
           </div>
 
-          <button className="btn btn-primary btn-lg" type="submit" disabled={isStreaming}>
-            <Command size={16} /> Start Agentic Review
+          <TextArea 
+            value={diff} 
+            onChange={(e) => setDiff(e.target.value)} 
+            placeholder="--- a/file.js ..." 
+            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', minHeight: '300px' }}
+          />
+
+          <button className="btn-premium btn-primary" type="submit" style={{ padding: '1.25rem', marginTop: '1rem' }}>
+            <Command size={18} /> START AGENTIC ANALYSIS
           </button>
         </form>
-      </div>
+      </GlassCard>
     </div>
   );
+}
+
+function Label({ children }) {
+  return <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>{children}</label>;
+}
+
+function Input(props) {
+  return <input {...props} style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', outline: 'none' }} />;
+}
+
+function TextArea(props) {
+  return <textarea {...props} style={{ width: '100%', padding: '1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', outline: 'none', resize: 'vertical', ...props.style }} />;
 }
