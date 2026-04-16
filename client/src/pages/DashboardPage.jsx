@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import TiltCard from '../components/ui/TiltCard';
+import omniLogo from '../assets/omni-logo.jpeg';
 
 export default function DashboardPage() {
   const { workspaceId } = useParams();
@@ -113,12 +114,12 @@ export default function DashboardPage() {
             <div style={{ textAlign: 'center', padding: '3rem 0' }}>
               <div style={{
                 width: 72, height: 72, borderRadius: '50%',
-                background: '#0a0a0a', padding: '10px',
+                background: '#ffffff', padding: '8px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 1.5rem',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                boxShadow: '0 8px 24px rgba(56, 189, 248, 0.15)',
               }}>
-                <img src="/logo.png" alt="Omni-SRE" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <img src={omniLogo} alt="Omni-SRE" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }} />
               </div>
               <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '1.5rem' }}>No intelligence logs available yet.</p>
               <Link to={`/workspace/${workspaceId}/review/new`} className="btn-pill btn-dark" style={{ fontSize: '0.8rem' }}>

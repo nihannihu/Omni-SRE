@@ -34,14 +34,16 @@ export default function Auth() {
         <div style={{ marginBottom: '2.5rem' }}>
           <div style={{ 
             width: 80, height: 80, margin: '0 auto 1.5rem', 
-            borderRadius: '24px', overflow: 'hidden',
-            boxShadow: '0 8px 32px rgba(56, 189, 248, 0.4)',
-            border: '2px solid rgba(56, 189, 248, 0.3)'
+            borderRadius: '50%', overflow: 'hidden',
+            background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 8px 32px rgba(56, 189, 248, 0.25)',
+            border: '1px solid rgba(56, 189, 248, 0.2)',
+            padding: '8px'
           }}>
             <img 
               src={omniLogo} 
               alt="Omni-SRE" 
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }} 
             />
           </div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
@@ -69,19 +71,6 @@ export default function Auth() {
         </div>
       </GlassCard>
 
-      {/* Ambient background decoration */}
-      <div style={{
-        position: 'absolute', top: '10%', right: '15%', 
-        width: '300px', height: '300px', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, transparent 70%)',
-        filter: 'blur(60px)', pointerEvents: 'none'
-      }} />
-      <div style={{
-        position: 'absolute', bottom: '15%', left: '10%', 
-        width: '250px', height: '250px', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, transparent 70%)',
-        filter: 'blur(60px)', pointerEvents: 'none'
-      }} />
     </div>
   );
 }

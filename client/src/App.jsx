@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import omniLogo from './assets/omni-logo.jpeg';
 
 // Layout & UI
 import AppLayout from './layouts/AppLayout';
@@ -103,11 +104,12 @@ export default function App() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#ffffff' }}>
         <CursorGlow />
         <div style={{
-          width: 80, height: 80, borderRadius: '50%', background: '#0a0a0a',
+          width: 80, height: 80, borderRadius: '50%', background: '#ffffff',
           overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)', marginBottom: '2rem', padding: '10px'
+          boxShadow: '0 8px 32px rgba(56, 189, 248, 0.2)', marginBottom: '2rem', padding: '8px',
+          border: '1px solid rgba(56, 189, 248, 0.1)'
         }}>
-          <img src="/logo.png" alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src={omniLogo} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }} />
         </div>
         <div style={{ width: 28, height: 28, border: '2.5px solid #f3f4f6', borderTopColor: '#0a0a0a', borderRadius: '50%', animation: 'spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite' }} />
         <p style={{ marginTop: '1.25rem', color: '#9ca3af', fontSize: '0.7rem', letterSpacing: '0.2em', fontWeight: 800, textTransform: 'uppercase' }}>Synchronizing Intelligence</p>
@@ -136,11 +138,11 @@ export default function App() {
           <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '2rem' }}>
             The next generation of context-aware engineering intelligence.
           </p>
-          <div style={{ margin: '0 auto 2rem', width: 84, height: 84, borderRadius: '50%', background: '#0a0a0a', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)', padding: '10px' }}>
+          <div style={{ margin: '0 auto 2rem', width: 84, height: 84, borderRadius: '50%', background: '#ffffff', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(56, 189, 248, 0.15)', padding: '8px', border: '1px solid rgba(56, 189, 248, 0.1)' }}>
             <img 
-              src="/logo.png" 
+              src={omniLogo} 
               alt="Omni-SRE" 
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }}
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = "https://ui-avatars.com/api/?name=O&background=0a0a0a&color=fff";

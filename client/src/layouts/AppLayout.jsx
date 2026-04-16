@@ -5,6 +5,7 @@ import {
   BookOpen, LogOut
 } from 'lucide-react';
 import ConfettiBackground from '../components/ui/ConfettiBackground';
+import omniLogo from '../assets/omni-logo.jpeg';
 
 export default function AppLayout({ session, currentWs, onLogout }) {
   const location = useLocation();
@@ -21,16 +22,17 @@ export default function AppLayout({ session, currentWs, onLogout }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
           <div style={{
             width: 38, height: 38, borderRadius: '50%',
-            background: '#0a0a0a',
+            background: '#ffffff',
             overflow: 'hidden',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 2px 8px rgba(56, 189, 248, 0.2)',
+            border: '1px solid rgba(56, 189, 248, 0.1)',
             padding: '4px',
           }}>
             <img 
-              src="/logo.png" 
+              src={omniLogo} 
               alt="Omni-SRE" 
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }}
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = "https://ui-avatars.com/api/?name=O&background=0a0a0a&color=fff";

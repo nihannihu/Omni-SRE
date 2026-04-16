@@ -1,6 +1,7 @@
 import React from 'react';
 import { supabase, supabaseUrl } from '../lib/supabase';
 import { GitPullRequest } from 'lucide-react';
+import omniLogo from '../assets/omni-logo.jpeg';
 import TiltCard from '../components/ui/TiltCard';
 import ConfettiBackground from '../components/ui/ConfettiBackground';
 
@@ -32,7 +33,6 @@ export default function LoginPage() {
           width: '100%', maxWidth: '420px', padding: '3.5rem 2.5rem',
           textAlign: 'center', position: 'relative', zIndex: 1,
           background: 'rgba(255, 255, 255, 0.85)',
-          backdropFilter: 'blur(20px)',
           border: '1px solid rgba(0, 0, 0, 0.06)',
           borderRadius: '24px',
           boxShadow: '0 8px 40px rgba(0, 0, 0, 0.08)',
@@ -42,17 +42,17 @@ export default function LoginPage() {
           {/* Geometric SVG Logo */}
           <div style={{
             width: 84, height: 84, margin: '0 auto 1.5rem',
-            background: '#0a0a0a', borderRadius: '50%',
+            background: '#ffffff', borderRadius: '50%',
             overflow: 'hidden',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(56, 189, 248, 0.25)',
+            border: '1px solid rgba(56, 189, 248, 0.1)',
             padding: '8px',
           }}>
             <img 
-              src="/logo.png" 
+              src={omniLogo} 
               alt="Omni-SRE" 
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }}
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = "https://ui-avatars.com/api/?name=O&background=0a0a0a&color=fff";

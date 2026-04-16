@@ -14,10 +14,11 @@ export default function Sidebar({ user, workspaces, currentWs, onLogout }) {
     <aside className="sidebar">
       <div className="sidebar-brand" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <div style={{ 
-          width: 40, height: 40, borderRadius: '12px', overflow: 'hidden',
-          boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)'
+          width: 42, height: 42, borderRadius: '50%', overflow: 'hidden',
+          background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(56, 189, 248, 0.2)', padding: '4px'
         }}>
-          <img src={omniLogo} alt="Omni-SRE" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={omniLogo} alt="Omni-SRE" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }} />
         </div>
         <h1 style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>Omni-SRE</h1>
       </div>

@@ -69,7 +69,7 @@ export default function MemoryBankPage() {
           placeholder="Search memories..."
           style={{
             width: '100%', padding: '0.75rem 1rem 0.75rem 2.75rem',
-            background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)',
+            background: 'rgba(255,255,255,0.8)',
             border: '1px solid rgba(0,0,0,0.08)', borderRadius: '999px',
             fontSize: '0.875rem', color: '#0a0a0a', outline: 'none',
             fontFamily: 'var(--font-sans)',
