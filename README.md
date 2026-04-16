@@ -49,10 +49,10 @@ Follow these steps to set up Omni-SRE from scratch.
 
 ### 2. Database Setup (Supabase)
 Run the following SQL scripts in your Supabase SQL Editor in order:
-1.  **[supabase_schema.sql](file:///c:/Users/nihan/OneDrive/Desktop/NIHU%20WORKS/Omni-SRE/supabase_schema.sql)**: Core tables and RLS.
-2.  **[pgvector_setup.sql](file:///c:/Users/nihan/OneDrive/Desktop/NIHU%20WORKS/Omni-SRE/pgvector_setup.sql)**: Vector extension and index.
-3.  **[create_reviews_table.sql](file:///c:/Users/nihan/OneDrive/Desktop/NIHU%20WORKS/Omni-SRE/create_reviews_table.sql)**: Hardened persistence layer.
-4.  **[workspace_settings.sql](file:///c:/Users/nihan/OneDrive/Desktop/NIHU%20WORKS/Omni-SRE/workspace_settings.sql)**: Repository-to-Workspace mapping.
+1.  **[supabase_schema.sql](./supabase_schema.sql)**: Core tables and RLS.
+2.  **[pgvector_setup.sql](./pgvector_setup.sql)**: Vector extension and index.
+3.  **[create_reviews_table.sql](./create_reviews_table.sql)**: Hardened persistence layer.
+4.  **[workspace_settings.sql](./workspace_settings.sql)**: Repository-to-Workspace mapping.
 
 ### 3. Environment Configuration
 Create a `.env` file in the **project root** and **client/** directory:
