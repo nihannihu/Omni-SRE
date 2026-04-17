@@ -4,7 +4,7 @@ import {
   ArrowLeft, Brain, Clock, FileCode, ShieldAlert, CheckCircle,
   ExternalLink, ChevronRight, Zap, Cpu, Code
 } from 'lucide-react';
-import { reviewAPI } from '../services/api';
+import { supabase } from '../lib/supabase';
 import TiltCard from '../components/ui/TiltCard';
 
 export default function ReviewDetail() {
@@ -15,9 +15,17 @@ export default function ReviewDetail() {
 
   const loadReview = async () => {
     try {
-      const { data } = await reviewAPI.get(reviewId);
-      setReview(data.review);
-      if (data.review.status === 'in_progress' || data.review.status === 'pending') {
+      const { data, error } = await supabase.from('reviews')
+        .select('*').eq('id', reviewId).single();
+      if (error) throw error;
+      const mapped = {
+        ...data,
+        prNumber: data.pr_number || data.pr_url?.split('/').pop(),
+        prTitle: data.pr_title,
+        workspaceId: data.workspace_id,
+      };
+      setReview(mapped);
+      if (mapped.status === 'in_progress' || mapped.status === 'pending') {
         setPolling(true);
       } else {
         setPolling(false);

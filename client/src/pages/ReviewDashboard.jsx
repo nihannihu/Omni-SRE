@@ -42,7 +42,7 @@ export default function ReviewDashboard() {
     setCurrentStep(1);
 
     try {
-      const response = await fetch('http://localhost:8000/review', {
+      const response = await fetch('http://localhost:8000/api/review/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ diff: PR_DIFF, bank_id: 'omni-review-bank' })

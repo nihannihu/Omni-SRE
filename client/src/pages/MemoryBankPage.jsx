@@ -13,17 +13,16 @@ export default function MemoryBankPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const { data } = await supabase.from('reviews')
-          .select('*').eq('workspace_id', workspaceId).order('created_at', { ascending: false });
-        const mems = (data || []).flatMap((r, ri) =>
-          (r.result?.findings || []).map((f, fi) => ({
-            id: `${r.id}-${fi}`,
-            text: f.description || f.title || 'Unknown finding',
-            category: (f.severity || 'info').toLowerCase(),
-            source: r.pr_title || 'Manual Review',
-            timestamp: r.created_at,
-          }))
-        );
+        const { data } = await supabase.from('incidents')
+          .select('*').eq('workspace_id', workspaceId)
+          .order('created_at', { ascending: false }).limit(50);
+        const mems = (data || []).map(inc => ({
+          id: inc.id,
+          text: inc.description || inc.title || 'Unknown incident',
+          category: (inc.severity || 'info').toLowerCase(),
+          source: inc.title || 'Logged Incident',
+          timestamp: inc.created_at,
+        }));
         setMemories(mems);
       } catch (err) {
         console.error('Memory bank error:', err);

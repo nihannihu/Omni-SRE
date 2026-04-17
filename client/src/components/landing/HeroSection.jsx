@@ -40,7 +40,7 @@ export default function HeroSection() {
     };
     window.addEventListener('mousemove', onMove);
 
-    const PARTICLE_COUNT = 300; // Massively increased for dense star network
+    const PARTICLE_COUNT = 60; // Massively reduced for zero lag
     const CONNECTION_DIST_SQ = 150 * 150;
 
     // Initialize particles with polar coordinates for the Galaxy Vortex
@@ -70,8 +70,8 @@ export default function HeroSection() {
       ctx.fillStyle = 'rgba(5, 5, 16, 0.25)'; // Slow fade
       ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
       
-      // Additive blending for gorgeous fake glow
-      ctx.globalCompositeOperation = 'lighter';
+      // Additive blending for gorgeous fake glow (disabled for max performance)
+      // ctx.globalCompositeOperation = 'lighter';
       
       // Smooth parallax interpolation
       currentParallax.x += (targetParallax.x - currentParallax.x) * 0.05;
@@ -137,14 +137,17 @@ export default function HeroSection() {
       
       for (let i = 0; i < particles.length; i++) {
         const pi = particles[i];
+        let connectionCount = 0;
         
         for (let j = i + 1; j < particles.length; j++) {
+          if (connectionCount >= 2) break;
           const pj = particles[j];
           const dx = pi.renderX - pj.renderX;
           const dy = pi.renderY - pj.renderY;
           const distSq = dx * dx + dy * dy;
           // Only connect nearby orbiting nodes
           if (distSq < CONNECTION_DIST_SQ) {
+            connectionCount++;
             ctx.beginPath();
             ctx.moveTo(pi.renderX, pi.renderY);
             ctx.lineTo(pj.renderX, pj.renderY);
@@ -236,22 +239,18 @@ export default function HeroSection() {
       {/* Gradient Orbs */}
       <div style={{
         position: 'absolute', top: '-10%', left: '-5%', width: 600, height: 600,
-        background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)',
-        borderRadius: '50%', filter: 'blur(80px)', willChange: 'transform',
-        animation: 'floatSlow 8s ease-in-out infinite',
+        background: 'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)',
+        borderRadius: '50%'
       }} />
       <div style={{
         position: 'absolute', bottom: '-15%', right: '-5%', width: 500, height: 500,
-        background: 'radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)',
-        borderRadius: '50%', filter: 'blur(80px)', willChange: 'transform',
-        animation: 'floatSlow 10s ease-in-out infinite 2s',
+        background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)',
+        borderRadius: '50%'
       }} />
       <div style={{
         position: 'absolute', top: '40%', left: '50%', width: 400, height: 400,
-        background: 'radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%)',
-        borderRadius: '50%', filter: 'blur(80px)', willChange: 'transform',
-        transform: 'translateX(-50%)',
-        animation: 'floatSlow 12s ease-in-out infinite 4s',
+        background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)',
+        borderRadius: '50%', transform: 'translateX(-50%)'
       }} />
 
       {/* Particle Canvas */}
