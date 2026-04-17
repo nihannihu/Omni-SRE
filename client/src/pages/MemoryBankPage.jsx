@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Brain, Search, Database, Fingerprint, Activity, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import TiltCard from '../components/ui/TiltCard';
+import Skeleton from '../components/ui/Skeleton';
 
 export default function MemoryBankPage() {
   const { workspaceId } = useParams();
@@ -48,8 +49,29 @@ export default function MemoryBankPage() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <div style={{ width: 24, height: 24, border: '3px solid #f1f5f9', borderTopColor: 'var(--brand-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <div className="animate-slide-up">
+        <header style={{ marginBottom: '3.5rem' }}>
+          <Skeleton width="180px" height="1.5rem" style={{ marginBottom: '1rem' }} borderRadius="var(--radius-full)" />
+          <Skeleton width="300px" height="3rem" style={{ marginBottom: '0.5rem' }} />
+          <Skeleton width="600px" height="1.5rem" />
+        </header>
+
+        <Skeleton width="100%" height="3.5rem" style={{ maxWidth: '600px', marginBottom: '3.5rem' }} />
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '2rem' }}>
+          {[1,2,3,4,5,6].map(idx => (
+            <TiltCard key={idx}>
+              <div className="glass-card" style={{ height: '300px', padding: '2.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                  <Skeleton width="80px" height="1.5rem" borderRadius="var(--radius-full)" />
+                  <Skeleton width="100px" height="1rem" />
+                </div>
+                <Skeleton width="100%" height="4rem" style={{ marginBottom: '1.5rem' }} />
+                <Skeleton width="60%" height="1rem" />
+              </div>
+            </TiltCard>
+          ))}
+        </div>
       </div>
     );
   }

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import GlassCard from '../components/ui/GlassCard';
+import Skeleton from '../components/ui/Skeleton';
 
 export default function Dashboard() {
   const { workspaceId } = useParams();
@@ -46,8 +47,36 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <div style={{ width: 30, height: 30, border: '3px solid var(--text-dim)', borderTopColor: 'var(--brand-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <div className="animate-slide-up">
+        <header style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <Skeleton width="300px" height="3rem" style={{ marginBottom: '0.5rem' }} />
+            <Skeleton width="400px" height="1.5rem" />
+          </div>
+          <Skeleton width="220px" height="3rem" borderRadius="var(--radius-full)" />
+        </header>
+
+        <div className="stat-grid">
+          {[1,2,3,4].map(idx => (
+            <GlassCard key={idx} className="stat-card">
+              <Skeleton width="60px" height="1rem" style={{ marginBottom: '1rem' }} />
+              <Skeleton width="100px" height="2.5rem" />
+            </GlassCard>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+          <GlassCard>
+            <Skeleton width="200px" height="1.5rem" style={{ marginBottom: '2rem' }} />
+            {[1,2,3,4,5].map(idx => <Skeleton key={idx} height="4rem" style={{ marginBottom: '1rem' }} />)}
+          </GlassCard>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <GlassCard>
+              <Skeleton width="150px" height="1.5rem" style={{ marginBottom: '1.5rem' }} />
+              {[1,2,3].map(idx => <Skeleton key={idx} height="5rem" style={{ marginBottom: '1rem' }} />)}
+            </GlassCard>
+          </div>
+        </div>
       </div>
     );
   }

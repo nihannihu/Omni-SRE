@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ShieldAlert, Brain, CheckCircle, ArrowLeft, Terminal, Activity, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { incidentAPI } from '../services/api';
 import TiltCard from '../components/ui/TiltCard';
 
 export default function SecurityLogPage() {
@@ -32,18 +31,7 @@ export default function SecurityLogPage() {
         }])
         .select().single();
       if (supaError) throw new Error(supaError.message);
-      try {
-        await incidentAPI.create({
-          workspaceId, incidentId: form.incidentId,
-          title: form.title, severity: form.severity,
-          rootCause: form.rootCause,
-          affectedFiles: form.affectedFiles.split(',').map(f => f.trim()).filter(Boolean),
-          lessonsLearned: form.lessonsLearned,
-        });
-        setRetainedToMemory(true);
-      } catch (ingestErr) {
-        console.warn('[INCIDENT] Intelligence ingestion failed:', ingestErr.message);
-      }
+      setRetainedToMemory(true);
       setSuccess('Incident intelligence logged successfully.');
       setForm({ incidentId: '', title: '', severity: 'P2', rootCause: '', affectedFiles: '', lessonsLearned: '' });
     } catch (err) {

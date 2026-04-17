@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ShieldAlert, Plus, Brain, CheckCircle, ArrowLeft, Terminal } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { incidentAPI } from '../services/api';
 import GlassCard from '../components/ui/GlassCard';
 
 export default function IncidentForm() {
@@ -33,21 +32,7 @@ export default function IncidentForm() {
         .select().single();
 
       if (supaError) throw new Error(supaError.message);
-
-      try {
-        await incidentAPI.create({
-          workspaceId,
-          incidentId: form.incidentId,
-          title: form.title,
-          severity: form.severity,
-          rootCause: form.rootCause,
-          affectedFiles: form.affectedFiles.split(',').map((f) => f.trim()).filter(Boolean),
-          lessonsLearned: form.lessonsLearned,
-        });
-        setRetainedToMemory(true);
-      } catch (ingestErr) {
-        console.warn('[INCIDENT] Hindsight ingestion failed:', ingestErr.message);
-      }
+      setRetainedToMemory(true);
 
       setSuccess('Operational Intelligence Logged Swuccessfully.');
       setForm({ incidentId: '', title: '', severity: 'P2', rootCause: '', affectedFiles: '', lessonsLearned: '' });
