@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  Send, FileCode, Brain, Command, CheckCircle,
-  AlertTriangle, Upload, ArrowLeft, Terminal, Cpu
+  Shield, Brain, Command, CheckCircle,
+  AlertTriangle, Upload, ArrowLeft, Terminal, Cpu, Zap, Activity
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ReactMarkdown from 'react-markdown';
@@ -64,7 +64,7 @@ export default function NewReviewPage() {
     setIsStreaming(true);
     setIsReviewComplete(false);
     setMarkdownContent('');
-    setStreamEvents([{ time: new Date(), message: 'INITIATING AGENTIC CHAIN...', type: 'info' }]);
+    setStreamEvents([{ time: new Date(), message: 'INITIALIZING ANALYSIS SEQUENCE...', type: 'info' }]);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -74,7 +74,7 @@ export default function NewReviewPage() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
         body: JSON.stringify({ workspace_id: workspaceId, diff, pr_context: prTitle ? `PR #${prNumber}: ${prTitle}` : 'Manual Analysis' })
       });
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      if (!response.ok) throw new Error(`API Connection Failed: ${response.status}`);
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
@@ -91,7 +91,7 @@ export default function NewReviewPage() {
             if (data.system_msg) setStreamEvents(prev => [...prev, { time: new Date(), message: data.system_msg, type: 'info' }]);
             if (data.content) setMarkdownContent(prev => prev + data.content);
             if (data.done) {
-              setStreamEvents(prev => [...prev, { time: new Date(), message: `EXECUTION COMPLETE. Found ${data.stats?.findings_count || 0} vulnerabilities.`, type: 'complete' }]);
+              setStreamEvents(prev => [...prev, { time: new Date(), message: `ANALYSIS COMPLETE. Committed findings to memory bank.`, type: 'complete' }]);
               setIsStreaming(false);
               setIsReviewComplete(true);
               await supabase.from('reviews').insert({
@@ -111,51 +111,68 @@ export default function NewReviewPage() {
     }
   };
 
-  // ── Streaming / Complete View ──
+  // ── Execution / Complete View ──
   if (isStreaming || isReviewComplete) {
     return (
-      <div className="animate-slide-up" style={{ maxWidth: '900px', margin: '0 auto' }}>
-        <header style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <h2 style={{ fontSize: '2rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
-            {isStreaming ? <Cpu size={28} style={{ color: '#3b82f6', animation: 'spin 2s linear infinite' }} /> : <CheckCircle size={28} style={{ color: '#10b981' }} />}
-            {isStreaming ? 'Agentic Analysis Active' : 'Intelligence Cycle Complete'}
+      <div className="animate-slide-up" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <header style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1.25rem', borderRadius: 'var(--radius-full)', background: 'var(--brand-glow)', border: '1px solid rgba(37, 99, 235, 0.1)', marginBottom: '1.5rem' }}>
+             <Activity size={16} className={isStreaming ? 'animate-pulse' : ''} style={{ color: 'var(--brand-primary)' }} />
+             <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--brand-primary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+               {isStreaming ? 'Analysis In Progress' : 'Analysis Finalized'}
+             </span>
+          </div>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.05em' }}>
+            {isStreaming ? 'Synthesizing Intelligence' : 'Technical Audit Complete'}
           </h2>
-          <p style={{ color: '#9ca3af', marginTop: '0.35rem', fontSize: '0.875rem' }}>
-            {isStreaming ? 'Synchronizing with institutional memory...' : 'Technical audit finished.'}
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '1.1rem' }}>
+            {isStreaming ? 'Evaluating code vectors against institutional standards...' : 'Audit findings have been committed to the workspace memory.'}
           </p>
         </header>
 
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Terminal */}
-          <div ref={terminalRef} style={{
-            background: '#0a0a0a', borderRadius: '16px', padding: '1.25rem',
-            fontFamily: 'var(--font-mono)', fontSize: '0.75rem', height: '220px',
-            overflowY: 'auto', color: '#e5e7eb',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-          }}>
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '1rem', opacity: 0.5 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} />
-            </div>
-            {streamEvents.map((evt, idx) => (
-              <div key={idx} style={{ marginBottom: '0.3rem', display: 'flex', gap: '0.75rem' }}>
-                <span style={{ color: '#6b7280', flexShrink: 0 }}>[{evt.time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'})}]</span>
-                <span style={{ color: evt.type === 'complete' ? '#10b981' : '#e5e7eb' }}>{evt.message}</span>
-              </div>
-            ))}
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          {/* Terminal Console */}
+          <div className="terminal-window">
+             <div className="terminal-header">
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff5f56' }} />
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ffbd2e' }} />
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#27c93f' }} />
+                <span style={{ marginLeft: '1rem', fontSize: '0.65rem', color: '#94a3b8', fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em' }}>ANALYSIS_STREAM.LOG</span>
+             </div>
+             <div ref={terminalRef} style={{
+               padding: '1.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', height: '240px',
+               overflowY: 'auto', color: '#e2e8f0', lineHeight: 1.6
+             }}>
+               {streamEvents.map((evt, idx) => (
+                 <div key={idx} style={{ marginBottom: '0.5rem', display: 'flex', gap: '1.25rem' }}>
+                   <span style={{ color: '#475569', flexShrink: 0 }}>[{evt.time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}]</span>
+                   <span style={{ color: evt.type === 'complete' ? '#6ee7b7' : 'inherit' }}>
+                     <span style={{ color: 'var(--brand-primary)', marginRight: '0.75rem', fontWeight: 900 }}>❯</span>
+                     {evt.message}
+                   </span>
+                 </div>
+               ))}
+               {isStreaming && (
+                 <div style={{ display: 'flex', gap: '1.25rem' }}>
+                   <span style={{ color: '#475569', flexShrink: 0 }}>[--:--]</span>
+                   <span style={{ color: 'var(--brand-primary)' }} className="animate-pulse">❯ PROCESSING CLUSTERS...</span>
+                 </div>
+               )}
+             </div>
           </div>
 
           {markdownContent && (
-            <TiltCard className="review-result-md" style={{ padding: '2rem', lineHeight: 1.7 }}>
-              <ReactMarkdown>{markdownContent}</ReactMarkdown>
+            <TiltCard>
+              <div className="glass-card markdown-content" style={{ padding: '3.5rem', background: '#fff' }}>
+                <ReactMarkdown>{markdownContent}</ReactMarkdown>
+              </div>
             </TiltCard>
           )}
 
           {isReviewComplete && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
-              <button onClick={() => navigate(`/workspace/${workspaceId}`)} className="btn-pill btn-dark">
-                Return to Command Center
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <button onClick={() => navigate(`/workspace/${workspaceId}`)} className="btn-pill btn-primary">
+                Return to Dashboard
               </button>
             </div>
           )}
@@ -164,88 +181,104 @@ export default function NewReviewPage() {
     );
   }
 
-  // ── Input Form View ──
+  // ── Mission Initiation View ──
   return (
-    <div className="animate-slide-up" style={{ maxWidth: '720px' }}>
-      <nav style={{ marginBottom: '1.5rem' }}>
-        <Link to={`/workspace/${workspaceId}`} style={{ fontSize: '0.85rem', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-          <ArrowLeft size={14} /> Back
+    <div className="animate-slide-up" style={{ maxWidth: '800px' }}>
+      <nav style={{ marginBottom: '2.5rem' }}>
+        <Link to={`/workspace/${workspaceId}`} style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', fontWeight: 700 }}>
+          <ArrowLeft size={16} /> BACK TO DASHBOARD
         </Link>
       </nav>
 
-      <header style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '2.25rem', fontWeight: 900, marginBottom: '0.35rem' }}>Initiate Code Review</h2>
-        <p style={{ color: '#9ca3af', fontSize: '0.9rem' }}>Inject technical debt knowledge and context into your reviews.</p>
+      <header style={{ marginBottom: '3.5rem' }}>
+        <h2 style={{ fontSize: '2.75rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.05em' }}>New Technical Review</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginTop: '0.5rem' }}>Input code changes for autonomous engineering evaluation.</p>
       </header>
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '0.875rem 1rem', borderRadius: '12px', color: '#ef4444', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
-          {error}
+        <div style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)', padding: '1.25rem 1.5rem', borderRadius: 'var(--radius-md)', color: 'var(--red)', marginBottom: '2.5rem', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <AlertTriangle size={18} /> {error}
         </div>
       )}
 
-      <TiltCard style={{ padding: '2rem' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Analysis Payload</h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div>
-            <Label>GitHub PR URL (Optional)</Label>
-            <Input type="url" value={prUrl} onChange={(e) => { setPrUrl(e.target.value); parsePrUrl(e.target.value); }} placeholder="https://github.com/org/repo/pull/123" />
+      <TiltCard>
+        <div className="glass-card" style={{ padding: '3.5rem', background: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem' }}>
+             <Zap size={20} style={{ color: 'var(--brand-primary)' }} />
+             <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Audit Parameters</h3>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem' }}>
-            <div>
-              <Label>Reference ID</Label>
-              <Input type="text" value={prNumber} onChange={(e) => setPrNumber(e.target.value)} placeholder="e.g. 55" />
+          
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '2rem' }}>
+              <div>
+                <Label>Audit Title</Label>
+                <Input type="text" value={prTitle} onChange={(e) => setPrTitle(e.target.value)} placeholder="e.g. Infrastructure Scalability Patch" />
+              </div>
+              <div>
+                <Label>Identifier #</Label>
+                <Input type="text" value={prNumber} onChange={(e) => setPrNumber(e.target.value)} placeholder="128" />
+              </div>
             </div>
+
             <div>
-              <Label>Review Title</Label>
-              <Input type="text" value={prTitle} onChange={(e) => setPrTitle(e.target.value)} placeholder="Feature: Auth migration" />
+              <Label>Source URL (Optional)</Label>
+              <Input type="url" value={prUrl} onChange={(e) => { setPrUrl(e.target.value); parsePrUrl(e.target.value); }} placeholder="https://github.com/org/repo/pull/123" />
             </div>
-          </div>
 
-          <div
-            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={handleFileDrop}
-            onClick={() => fileInputRef.current?.click()}
-            style={{
-              border: `2px dashed ${isDragOver ? '#3b82f6' : 'rgba(0,0,0,0.1)'}`,
-              borderRadius: '16px', padding: '2rem', textAlign: 'center',
-              transition: 'all 200ms ease',
-              background: isDragOver ? '#eff6ff' : '#fafafa',
-            }}
-          >
-            <Upload size={24} style={{ color: isDragOver ? '#3b82f6' : '#d1d5db', marginBottom: '0.5rem' }} />
-            <p style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
-              Drop a <code style={{ background: 'rgba(0,0,0,0.04)', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>.diff</code> file or paste content below.
-            </p>
-            <input ref={fileInputRef} type="file" onChange={handleFileDrop} style={{ display: 'none' }} />
-          </div>
+            <div>
+              <Label>Code Payload (Diff Text)</Label>
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={handleFileDrop}
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  border: `2px dashed ${isDragOver ? 'var(--brand-primary)' : '#e2e8f0'}`,
+                  borderRadius: 'var(--radius-md)', padding: '3rem', textAlign: 'center',
+                  transition: 'var(--transition-smooth)',
+                  background: isDragOver ? 'rgba(37, 99, 235, 0.02)' : '#f8fafc',
+                  cursor: 'pointer', marginBottom: '1.5rem'
+                }}
+              >
+                <Upload size={32} style={{ color: isDragOver ? 'var(--brand-primary)' : 'var(--text-dim)', marginBottom: '1rem' }} />
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  Drag & Drop <code style={{ color: 'var(--brand-primary)', background: 'rgba(37, 99, 235, 0.05)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>.diff</code> or Click to Browse
+                </p>
+                <input ref={fileInputRef} type="file" onChange={handleFileDrop} style={{ display: 'none' }} />
+              </div>
 
-          <textarea
-            value={diff} onChange={(e) => setDiff(e.target.value)}
-            placeholder="--- a/file.js ..."
-            style={{
-              width: '100%', padding: '1rem', background: '#fafafa',
-              border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px',
-              color: '#0a0a0a', fontSize: '0.8rem', outline: 'none',
-              resize: 'vertical', fontFamily: 'var(--font-mono)', minHeight: '250px',
-            }}
-          />
+              <textarea
+                value={diff} onChange={(e) => setDiff(e.target.value)}
+                placeholder="Paste diff content here..."
+                style={{
+                  width: '100%', padding: '1.5rem', background: '#f8fafc',
+                  border: '1px solid #e2e8f0', borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-primary)', fontSize: '0.9rem', outline: 'none',
+                  resize: 'vertical', fontFamily: 'var(--font-mono)', minHeight: '280px',
+                  transition: 'var(--transition-smooth)'
+                }}
+              />
+            </div>
 
-          <button className="btn-pill btn-dark" type="submit" style={{ padding: '0.875rem', justifyContent: 'center', width: '100%' }}>
-            <Command size={16} /> START AGENTIC ANALYSIS
-          </button>
-        </form>
+            <button className="btn-pill btn-primary" type="submit" style={{ padding: '1.25rem', justifyContent: 'center', width: '100%', fontSize: '1rem', letterSpacing: '0.05em' }}>
+              <Command size={20} /> INITIATE ANALYSIS SEQUENCE
+            </button>
+          </form>
+        </div>
       </TiltCard>
     </div>
   );
 }
 
 function Label({ children }) {
-  return <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>{children}</label>;
+  return <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '0.75rem' }}>{children}</label>;
 }
 
 function Input(props) {
-  return <input {...props} style={{ width: '100%', padding: '0.75rem 1rem', background: '#fafafa', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', color: '#0a0a0a', fontSize: '0.85rem', outline: 'none', fontFamily: 'var(--font-sans)', ...props.style }} />;
+  return <input {...props} style={{ 
+    width: '100%', padding: '1.125rem 1.25rem', background: '#f8fafc', 
+    border: '1px solid #e2e8f0', borderRadius: 'var(--radius-md)', 
+    color: 'var(--text-primary)', fontSize: '1rem', outline: 'none', 
+    transition: 'var(--transition-smooth)', ...props.style 
+  }} />;
 }
