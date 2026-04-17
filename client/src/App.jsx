@@ -6,19 +6,17 @@ import omniLogo from './assets/omni-logo.jpeg';
 
 // Layout & UI
 import AppLayout from './layouts/AppLayout';
-import CursorGlow from './components/ui/CursorGlow';
 import ConfettiBackground from './components/ui/ConfettiBackground';
 import TiltCard from './components/ui/TiltCard';
 
-// Pages — New Premium
+// Pages
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import NewReviewPage from './pages/NewReviewPage';
 import SecurityLogPage from './pages/SecurityLogPage';
 import MemoryBankPage from './pages/MemoryBankPage';
 import ConventionsPage from './pages/ConventionsPage';
-
-// Pages — Original (still used)
 import ReviewDetail from './pages/ReviewDetail';
 import ReviewDashboard from './pages/ReviewDashboard';
 
@@ -32,6 +30,36 @@ export default function App() {
   const location = useLocation();
 
   const ready = authInitialized && workspacesLoaded;
+
+  // ═══════ FORCE CURSOR VISIBILITY (GLOBAL SYSTEM OVERRIDE) ═══════
+  useEffect(() => {
+    // 1. Force styles onto root elements
+    document.body.style.setProperty('cursor', 'default', 'important');
+    document.documentElement.style.setProperty('cursor', 'default', 'important');
+    
+    // 2. Inject a global style tag that wins everything
+    let styleTag = document.getElementById('extreme-cursor-fix');
+    if (!styleTag) {
+      styleTag = document.createElement('style');
+      styleTag.id = 'extreme-cursor-fix';
+      document.head.appendChild(styleTag);
+    }
+    styleTag.innerHTML = `
+      * { cursor: default !important; }
+      a, button, [role="button"], input, select, textarea, [onclick], .landing-btn, .nav-item { 
+         cursor: pointer !important; 
+      }
+    `;
+
+    // 3. Periodic sanity check to clear rogue styles added by hidden libs
+    const interval = setInterval(() => {
+      if (document.body.style.cursor === 'none') {
+        document.body.style.setProperty('cursor', 'default', 'important');
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [location.pathname]);
 
   // ═══════ AUTH & WORKSPACE LOGIC (Stay Protected) ═══════
   useEffect(() => {
@@ -97,64 +125,111 @@ export default function App() {
     navigate(`/workspace/${wsData.id}`);
   };
 
-  // ═══════ RENDER GATES ═══════
-
-  if (!ready) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#ffffff' }}>
-        <CursorGlow />
-        <div style={{
-          width: 80, height: 80, borderRadius: '50%', background: '#ffffff',
-          overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 8px 32px rgba(56, 189, 248, 0.2)', marginBottom: '2rem', padding: '8px',
-          border: '1px solid rgba(56, 189, 248, 0.1)'
-        }}>
-          <img src={omniLogo} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }} />
-        </div>
-        <div style={{ width: 28, height: 28, border: '2.5px solid #f3f4f6', borderTopColor: '#0a0a0a', borderRadius: '50%', animation: 'spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite' }} />
-        <p style={{ marginTop: '1.25rem', color: '#9ca3af', fontSize: '0.7rem', letterSpacing: '0.2em', fontWeight: 800, textTransform: 'uppercase' }}>Synchronizing Intelligence</p>
+  // ═══════ UI LOADER ═══════
+  const FullPageLoader = ({ text }) => (
+    <div style={{ 
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+      height: '100vh', background: 'transparent', position: 'relative', overflow: 'hidden',
+      zIndex: 2
+    }}>
+      <ConfettiBackground />
+      <div style={{
+        width: 96, height: 96, borderRadius: '24px', background: '#fff',
+        overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.06)', marginBottom: '2.5rem', padding: '12px',
+        border: '1px solid var(--border-subtle)', position: 'relative', zIndex: 1
+      }}>
+        <img src={omniLogo} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '14px' }} />
       </div>
-    );
+      <div style={{ 
+        width: 24, height: 24, border: '3px solid #f1f5f9', borderTopColor: 'var(--brand-primary)', 
+        borderRadius: '50%', animation: 'spin 1s linear infinite',
+        position: 'relative', zIndex: 1
+      }} />
+      <p style={{ 
+        marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.7rem', 
+        letterSpacing: '0.2em', fontWeight: 800, textTransform: 'uppercase',
+        position: 'relative', zIndex: 1
+      }}>{text}</p>
+    </div>
+  );
+
+  // ═══════ RENDER GATES ═══════
+  
+  // 1. Wait for Supabase to resolve initial session (prevents OAuth flicker)
+  if (!authInitialized) {
+    return <FullPageLoader text="Authenticating..." />;
   }
 
-  if (!session) {
+  // 2. Serve public routes if no session
+  if (location.pathname === '/' && !session) {
+    return <LandingPage />;
+  }
+
+  if (location.pathname === '/auth' && !session) {
     return (
       <>
-        <CursorGlow />
+        <ConfettiBackground />
         <LoginPage />
       </>
     );
   }
 
+  // 3. Fallback to ensure session exists for guarded routes
+  if (!session) {
+    return <Navigate to="/" replace />;
+  }
+
+  // 4. Wait for Workspaces to load if authenticated
+  if (!workspacesLoaded) {
+    return <FullPageLoader text="Synchronizing Signals" />;
+  }
+
+  // Authenticated but no session (shouldn't happen, but safety)
+  if (!session) {
+    return <Navigate to="/" replace />;
+  }
+
   if (workspaces.length === 0) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '2rem', background: '#ffffff', position: 'relative', overflow: 'hidden' }}>
-        <CursorGlow />
+      <div style={{ 
+        display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', 
+        padding: '2rem', background: 'transparent', position: 'relative', overflow: 'hidden',
+        zIndex: 2
+      }}>
         <ConfettiBackground />
-        <TiltCard
-          style={{ maxWidth: '440px', textAlign: 'center', padding: '3rem', position: 'relative', zIndex: 1 }}
-        >
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Welcome to Omni-SRE</h3>
-          <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '2rem' }}>
-            The next generation of context-aware engineering intelligence.
-          </p>
-          <div style={{ margin: '0 auto 2rem', width: 84, height: 84, borderRadius: '50%', background: '#ffffff', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(56, 189, 248, 0.15)', padding: '8px', border: '1px solid rgba(56, 189, 248, 0.1)' }}>
-            <img 
-              src={omniLogo} 
-              alt="Omni-SRE" 
-              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://ui-avatars.com/api/?name=O&background=0a0a0a&color=fff";
-              }}
-            />
+        <TiltCard>
+          <div className="glass-card" style={{ maxWidth: '440px', textAlign: 'center', padding: '3.5rem' }}>
+            <h3 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+              Initialize Workspace
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: '2.5rem', lineHeight: 1.6 }}>
+              Welcome to Omni-SRE. Let's establish your first operational environment.
+            </p>
+            <div style={{ 
+              margin: '0 auto 2.5rem', width: 96, height: 96, borderRadius: '24px', 
+              background: '#fff', 
+              overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              boxShadow: '0 12px 40px rgba(0,0,0,0.06)', padding: '12px',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              <img 
+                src={omniLogo} 
+                alt="Omni-SRE" 
+                style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '14px' }}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "https://ui-avatars.com/api/?name=O&background=f1f5f9&color=2563eb";
+                }}
+              />
+            </div>
+            <button onClick={createWorkspace} className="btn-pill btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
+              <Plus size={18} /> Create Workspace
+            </button>
+            <button onClick={handleLogout} style={{ marginTop: '1.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+              Sign Out
+            </button>
           </div>
-          <button onClick={createWorkspace} className="btn-pill btn-dark" style={{ width: '100%', justifyContent: 'center' }}>
-            <Plus size={16} /> Create Your First Workspace
-          </button>
-          <button onClick={handleLogout} style={{ marginTop: '1.25rem', background: 'none', border: 'none', color: '#9ca3af', fontSize: '0.8rem', fontWeight: 500 }}>
-            Sign Out
-          </button>
         </TiltCard>
       </div>
     );
@@ -165,10 +240,11 @@ export default function App() {
 
   return (
     <>
-      <CursorGlow />
+      <ConfettiBackground />
       <Routes>
+        <Route path="/" element={<Navigate to={`/workspace/${currentWs?.id}`} replace />} />
+        <Route path="/auth" element={<Navigate to={`/workspace/${currentWs?.id}`} replace />} />
         <Route element={<AppLayout session={session} currentWs={currentWs} onLogout={handleLogout} />}>
-          <Route path="/" element={<Navigate to={`/workspace/${currentWs?.id}`} replace />} />
           <Route path="/interactive-demo" element={<ReviewDashboard />} />
           <Route path="/workspace/:workspaceId" element={<DashboardPage />} />
           <Route path="/workspace/:workspaceId/review/new" element={<NewReviewPage />} />

@@ -21,21 +21,22 @@ export default function ConfettiBackground() {
     resize();
     window.addEventListener('resize', resize);
 
-    const colors = ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'];
-    const STICK_COUNT = 55;
-    const REPEL_RADIUS = 100;
+    // Vibrant, multi-colored confetti palette
+    const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+    const STICK_COUNT = 85;
+    const REPEL_RADIUS = 130;
 
     // Initialize sticks — scattered across full height, falling down
     const sticks = Array.from({ length: STICK_COUNT }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
       rotation: Math.random() * Math.PI,
-      length: 14 + Math.random() * 14,
-      width: 1.5 + Math.random() * 0.5,
+      length: 16 + Math.random() * 18,
+      width: 1.8 + Math.random() * 0.7,
       color: colors[Math.floor(Math.random() * colors.length)],
-      opacity: 0.45 + Math.random() * 0.2,
-      speed: 0.3 + Math.random() * 0.6,
-      drift: (Math.random() - 0.5) * 0.2,
+      opacity: 0.6 + Math.random() * 0.3,
+      speed: 1.0 + Math.random() * 1.5, // Increased speed to make them fast again, but slightly smoother than original
+      drift: (Math.random() - 0.5) * 0.3,
       vx: 0,
       vy: 0,
     }));

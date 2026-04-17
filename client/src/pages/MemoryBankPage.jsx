@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Brain, Search } from 'lucide-react';
+import { Brain, Search, Database, Fingerprint, Activity, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import TiltCard from '../components/ui/TiltCard';
 
@@ -19,7 +19,7 @@ export default function MemoryBankPage() {
           (r.result?.findings || []).map((f, fi) => ({
             id: `${r.id}-${fi}`,
             text: f.description || f.title || 'Unknown finding',
-            category: f.severity || 'info',
+            category: (f.severity || 'info').toLowerCase(),
             source: r.pr_title || 'Manual Review',
             timestamp: r.created_at,
           }))
@@ -35,8 +35,11 @@ export default function MemoryBankPage() {
   }, [workspaceId]);
 
   const categoryColors = {
-    critical: '#ef4444', high: '#f59e0b', medium: '#3b82f6',
-    low: '#10b981', info: '#8b5cf6',
+    critical: '#ef4444', 
+    high: '#f59e0b', 
+    medium: '#3b82f6', 
+    low: '#10b981', 
+    info: '#8b5cf6',
   };
 
   const filtered = memories.filter(m =>
@@ -47,68 +50,85 @@ export default function MemoryBankPage() {
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <div style={{ width: 30, height: 30, border: '3px solid #e5e7eb', borderTopColor: '#0a0a0a', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <div style={{ width: 24, height: 24, border: '3px solid #f1f5f9', borderTopColor: 'var(--brand-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     );
   }
 
   return (
     <div className="animate-slide-up">
-      <header style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '2.25rem', fontWeight: 900, marginBottom: '0.35rem' }}>Memory Bank</h2>
-        <p style={{ color: '#9ca3af', fontSize: '0.9rem' }}>Aggregated intelligence from all code reviews.</p>
+      <header style={{ marginBottom: '3.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+           <Database size={18} style={{ color: 'var(--brand-primary)' }} />
+           <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--brand-primary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Institutional Knowledge</span>
+        </div>
+        <h2 style={{ fontSize: '2.75rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.05em' }}>Memory Bank</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginTop: '0.5rem' }}>Aggregated engineering patterns and reliability constraints synthesized from historical analysis.</p>
       </header>
 
-      {/* Search */}
+      {/* Advanced Filter */}
       <div style={{
-        position: 'relative', marginBottom: '2rem', maxWidth: '480px',
+        position: 'relative', marginBottom: '3.5rem', maxWidth: '600px',
       }}>
-        <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+        <div style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 1 }}>
+           <Search size={18} />
+        </div>
         <input
           value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Search memories..."
+          placeholder="Filter intelligence nodes by pattern or context..."
           style={{
-            width: '100%', padding: '0.75rem 1rem 0.75rem 2.75rem',
-            background: 'rgba(255,255,255,0.8)',
-            border: '1px solid rgba(0,0,0,0.08)', borderRadius: '999px',
-            fontSize: '0.875rem', color: '#0a0a0a', outline: 'none',
-            fontFamily: 'var(--font-sans)',
+            width: '100%', padding: '1.125rem 1.5rem 1.125rem 3.5rem',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0', borderRadius: 'var(--radius-md)',
+            fontSize: '1rem', color: 'var(--text-primary)', outline: 'none',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+            fontFamily: 'var(--font-sans)', transition: 'var(--transition-smooth)'
           }}
         />
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+        <div style={{ textAlign: 'center', padding: '6rem 0' }}>
           <div style={{
-            width: 72, height: 72, borderRadius: '50%',
-            border: '2px dashed rgba(0,0,0,0.1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 1rem',
+            width: 80, height: 80,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '1.5rem', borderRadius: '20px', background: '#f8fafc',
+            border: '1px solid #e2e8f0'
           }}>
-            <Brain size={28} style={{ color: '#8b5cf6' }} />
+            <Fingerprint size={32} style={{ color: '#94a3b8' }} />
           </div>
-          <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-            No memory entries yet. Start a code review to build intelligence.
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>Empty Vector Space</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginTop: '0.5rem', fontWeight: 500 }}>
+            No memories match your query. Initiate more audits to populate the knowledge bank.
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '2rem' }}>
           {filtered.map((mem, i) => (
-            <TiltCard key={mem.id} className="animate-fade-in" style={{ animationDelay: `${i * 50}ms`, padding: '1.25rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                <span style={{
-                  background: `${categoryColors[mem.category] || '#8b5cf6'}15`,
-                  color: categoryColors[mem.category] || '#8b5cf6',
-                  padding: '0.15rem 0.6rem', borderRadius: '999px',
-                  fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
-                }}>{mem.category}</span>
-                <span style={{ fontSize: '0.65rem', color: '#d1d5db' }}>
-                  {new Date(mem.timestamp).toLocaleDateString()}
-                </span>
+            <TiltCard key={mem.id} className="animate-fade-in" style={{ animationDelay: `${i * 30}ms` }}>
+              <div className="glass-card" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff', padding: '2.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <span style={{
+                    background: `${categoryColors[mem.category] || '#8b5cf6'}12`,
+                    color: categoryColors[mem.category] || '#8b5cf6',
+                    padding: '0.4rem 0.85rem', borderRadius: 'var(--radius-full)',
+                    fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase',
+                    border: `1px solid ${categoryColors[mem.category] || '#8b5cf6'}22`,
+                    letterSpacing: '0.1em'
+                  }}>{mem.category}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700 }}>
+                     <Clock size={12} />
+                     {new Date(mem.timestamp).toLocaleDateString()}
+                  </div>
+                </div>
+                <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', lineHeight: 1.7, flex: 1, marginBottom: '1.5rem', fontWeight: 500 }}>
+                   {mem.text}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9', color: 'var(--brand-primary)', fontSize: '0.8rem', fontWeight: 800 }}>
+                   <Activity size={12} />
+                   <span style={{ opacity: 0.8, letterSpacing: '0.02em' }}>SOURCE: {mem.source}</span>
+                </div>
               </div>
-              <p style={{ fontSize: '0.8rem', color: '#6b7280', lineHeight: 1.6 }}>
-                {mem.text.length > 150 ? mem.text.substring(0, 150) + '...' : mem.text}
-              </p>
             </TiltCard>
           ))}
         </div>

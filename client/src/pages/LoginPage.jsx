@@ -1,13 +1,11 @@
 import React from 'react';
-import { supabase, supabaseUrl } from '../lib/supabase';
-import { GitPullRequest } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { Github, Zap } from 'lucide-react';
 import omniLogo from '../assets/omni-logo.jpeg';
 import TiltCard from '../components/ui/TiltCard';
-import ConfettiBackground from '../components/ui/ConfettiBackground';
 
 export default function LoginPage() {
   const handleLogin = async () => {
-    console.log('-> INITIATING OAUTH WITH URL:', supabaseUrl);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
@@ -22,84 +20,85 @@ export default function LoginPage() {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      minHeight: '100vh', padding: '1rem', background: '#ffffff',
+      minHeight: '100vh', padding: '1.5rem', background: 'transparent',
       position: 'relative', overflow: 'hidden',
     }}>
-      <ConfettiBackground />
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px' }}>
+        <TiltCard className="animate-slide-up">
+           <div className="glass-card" style={{ padding: '4rem 3rem', textAlign: 'center' }}>
+            <div style={{ marginBottom: '3rem' }}>
+              {/* Logo Section */}
+              <div style={{
+                width: 104, height: 104, margin: '0 auto 2.5rem',
+                background: '#ffffff',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.08)',
+                padding: '12px',
+                border: '1px solid rgba(0, 0, 0, 0.05)'
+              }}>
+                  <img 
+                    src={omniLogo} 
+                    alt="Omni-SRE" 
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '14px' }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://ui-avatars.com/api/?name=O&background=f1f5f9&color=2563eb";
+                    }}
+                  />
+              </div>
 
-      <TiltCard
-        className="animate-slide-up"
-        style={{
-          width: '100%', maxWidth: '420px', padding: '3.5rem 2.5rem',
-          textAlign: 'center', position: 'relative', zIndex: 1,
-          background: 'rgba(255, 255, 255, 0.85)',
-          border: '1px solid rgba(0, 0, 0, 0.06)',
-          borderRadius: '24px',
-          boxShadow: '0 8px 40px rgba(0, 0, 0, 0.08)',
-        }}
-      >
-        <div style={{ marginBottom: '2.5rem' }}>
-          {/* Geometric SVG Logo */}
-          <div style={{
-            width: 84, height: 84, margin: '0 auto 1.5rem',
-            background: '#ffffff', borderRadius: '50%',
-            overflow: 'hidden',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(56, 189, 248, 0.25)',
-            border: '1px solid rgba(56, 189, 248, 0.1)',
-            padding: '8px',
-          }}>
-            <img 
-              src={omniLogo} 
-              alt="Omni-SRE" 
-              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%' }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://ui-avatars.com/api/?name=O&background=0a0a0a&color=fff";
+              <h2 style={{
+                fontSize: '2.5rem', fontWeight: 800,
+                color: 'var(--text-primary)', marginBottom: '0.75rem',
+                letterSpacing: '-0.05em',
+              }}>
+                Omni-SRE
+              </h2>
+              <p style={{
+                color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.6,
+                fontWeight: 500
+              }}>
+                Engineering Intelligence. <br/>
+                Reliability scaling at the speed of thought.
+              </p>
+            </div>
+
+            <button
+              onClick={handleLogin}
+              className="btn-pill btn-primary"
+              style={{
+                width: '100%', justifyContent: 'center',
+                padding: '1rem', fontSize: '1rem',
               }}
-            />
+            >
+              <Github size={22} />
+              <span>Connect GitHub</span>
+            </button>
+
+            <div style={{
+              marginTop: '3rem', paddingTop: '2.5rem',
+              borderTop: '1px solid var(--border-subtle)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Zap size={14} style={{ color: 'var(--brand-primary)' }} />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                  Institutional Grade
+                </span>
+              </div>
+            </div>
           </div>
-
-          <h2 style={{
-            fontSize: '2rem', fontWeight: 900,
-            color: '#0a0a0a', marginBottom: '0.5rem',
-            letterSpacing: '-0.03em',
-          }}>
-            Omni-SRE
-          </h2>
-          <p style={{
-            color: '#9ca3af', fontSize: '0.9rem', lineHeight: 1.6,
-          }}>
-            The AI-first Site Reliability Engine. <br/>
-            Context-aware intelligence for modern engineering.
-          </p>
-        </div>
-
-        <button
-          onClick={handleLogin}
-          className="btn-pill btn-dark"
-          style={{
-            width: '100%', justifyContent: 'center',
-            padding: '0.875rem 1.75rem', fontSize: '0.9rem',
-          }}
-        >
-          <GitPullRequest size={18} />
-          <span>Continue with GitHub</span>
-        </button>
-
-        <div style={{
-          marginTop: '2.5rem', paddingTop: '1.5rem',
-          borderTop: '1px solid rgba(0, 0, 0, 0.06)',
+        </TiltCard>
+        
+        <p style={{ 
+          marginTop: '2.5rem', textAlign: 'center', color: 'var(--text-dim)', 
+          fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.05em'
         }}>
-          <p style={{
-            fontSize: '0.65rem', color: '#d1d5db',
-            letterSpacing: '0.15em', textTransform: 'uppercase',
-            fontWeight: 700,
-          }}>
-            Enterprise Grade Reliability
-          </p>
-        </div>
-      </TiltCard>
+          Omni-SRE Dashboard v2.0
+        </p>
+      </div>
     </div>
   );
 }

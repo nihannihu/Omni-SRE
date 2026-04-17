@@ -1,0 +1,269 @@
+/* ══════════════════════════════════════════════════════════
+   Omni-SRE Landing Page — Premium Styles
+   ══════════════════════════════════════════════════════════ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+.landing-page, .landing-page * {
+  /* removed rogue cursor rule */
+}
+
+/* ── Custom Scrollbar ── */
+.landing-page::-webkit-scrollbar { width: 6px; }
+.landing-page::-webkit-scrollbar-track { background: #050510; }
+.landing-page::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 999px; }
+
+/* ── Scroll Reveal ── */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s cubic-bezier(0.23, 1, 0.32, 1), transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Staggered Delays ── */
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+
+/* ── Gradient Animated Text ── */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #3b82f6, #7c3aed, #10b981, #3b82f6);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* ── Pill Badge ── */
+.landing-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.landing-pill-dark {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #e5e7eb;
+  backdrop-filter: blur(12px);
+}
+
+.landing-pill-light {
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.2);
+  color: #3b82f6;
+}
+
+.landing-pill-red {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  color: #ef4444;
+}
+
+/* ── Landing Buttons ── */
+.landing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 32px;
+  border-radius: 999px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  text-decoration: none;
+  border: none;
+  white-space: nowrap;
+}
+
+.landing-btn:active {
+  transform: scale(0.95) !important;
+}
+
+.landing-btn-primary {
+  background: #0a0a14;
+  color: #ffffff;
+}
+
+.landing-btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 40px rgba(59,130,246,0.4), 0 0 80px rgba(59,130,246,0.15);
+}
+
+.landing-btn-ghost {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.landing-btn-ghost:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.6);
+  transform: scale(1.05);
+}
+
+.landing-btn-white {
+  background: #0a0a14;
+  color: #ffffff;
+}
+
+.landing-btn-white:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 40px rgba(59,130,246,0.3);
+}
+
+/* ── 3D Tilt Card ── */
+.tilt-card-3d {
+  perspective: 1000px;
+}
+
+.tilt-card-3d-inner {
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* ── Glass Card (Dark) ── */
+.glass-dark {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+}
+
+/* ── Glass Card (Light) ── */
+.glass-light {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.glass-light:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+
+/* ── Section Divider Wave ── */
+.wave-divider {
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.wave-divider svg {
+  display: block;
+  width: 100%;
+  height: 80px;
+}
+
+/* ── Floating Animation ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(1deg); }
+}
+
+/* ── Bounce Arrow ── */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(12px); opacity: 0.5; }
+}
+
+/* ── Animated Counter ── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Pulse ── */
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ── Dash Flow ── */
+@keyframes dashFlow {
+  to { stroke-dashoffset: -20; }
+}
+
+/* ── Gradient Border ── */
+@keyframes borderGradient {
+  0% { border-color: #3b82f6; }
+  33% { border-color: #7c3aed; }
+  66% { border-color: #10b981; }
+  100% { border-color: #3b82f6; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .landing-hero-heading {
+    font-size: 48px !important;
+  }
+  .landing-section-heading {
+    font-size: 36px !important;
+  }
+  .landing-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+  .landing-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+  .landing-hero-buttons {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .landing-nav-links {
+    display: none !important;
+  }
+  .landing-nav-buttons {
+    display: none !important;
+  }
+  .landing-mobile-menu-btn {
+    display: flex !important;
+  }
+  .landing-pipeline {
+    flex-direction: column !important;
+  }
+  .landing-pipeline-line {
+    display: none !important;
+  }
+  .landing-stats-row {
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-hero-heading {
+    font-size: 36px !important;
+  }
+}
